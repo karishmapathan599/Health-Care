@@ -4,11 +4,16 @@ A patient portal prototype built with React + Vite: appointments, medical record
 
 All data is fictional demo data (see `src/data/seedData.js`). This is a front-end-only prototype — nothing is sent to a server, and anything you change (booking an appointment, requesting a refill, sending a message, logging a vital) is saved to your own browser's `localStorage` only.
 
+## Requirements
+
+- **Node.js 16.x** (see `.nvmrc`). If you use `nvm`: `nvm install 16 && nvm use 16`.
+
 ## Clone and run
 
 ```bash
 git clone https://github.com/karishmapathan599/Health-Care.git
 cd Health-Care
+nvm use          # picks up Node 16 from .nvmrc, if you use nvm
 npm install
 npm run dev
 ```
@@ -59,4 +64,4 @@ Then open the local URL Vite prints (typically `http://localhost:5173`).
 
 ## Tech
 
-React 18, Vite 5. No CSS framework or UI kit — plain CSS with custom properties for theming (light/dark via `prefers-color-scheme`).
+React 18, Vite 4 (targets Node 16). No CSS framework or UI kit — plain CSS with custom properties for theming (light/dark via `prefers-color-scheme`).
