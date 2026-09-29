@@ -1,0 +1,872 @@
+<title>Harborview Patient Portal</title>
+<style>
+  :root{
+    --bg:#F4F6F5; --surface:#FFFFFF; --surface-2:#EAF0EE;
+    --text:#1E2B29; --text-muted:#5C6E6A;
+    --accent:#2F7D6E; --accent-ink:#FFFFFF; --accent-soft:#E3EFEC;
+    --accent-2:#C8763A; --accent-2-soft:#F7E7DA;
+    --danger:#C0392B; --danger-soft:#F7E2DE;
+    --ok:#2F7D6E; --ok-soft:#E3EFEC;
+    --border:#DCE4E1;
+    --code-bg:#152321; --code-text:#D8E7E3;
+    --radius:12px;
+    --shadow:0 1px 2px rgba(20,35,30,.05), 0 10px 28px -14px rgba(20,35,30,.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0F1614; --surface:#161F1D; --surface-2:#1C2724;
+      --text:#E7EEEC; --text-muted:#8FA39D;
+      --accent:#4FB39E; --accent-ink:#08201B; --accent-soft:#1C2E2A;
+      --accent-2:#E08F52; --accent-2-soft:#2E241C;
+      --danger:#E17A63; --danger-soft:#2E1F1C;
+      --ok:#4FB39E; --ok-soft:#1C2E2A;
+      --border:#263330;
+      --code-bg:#0C1413; --code-text:#CFE0DB;
+      --shadow:0 1px 2px rgba(0,0,0,.35), 0 10px 30px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0F1614; --surface:#161F1D; --surface-2:#1C2724;
+    --text:#E7EEEC; --text-muted:#8FA39D;
+    --accent:#4FB39E; --accent-ink:#08201B; --accent-soft:#1C2E2A;
+    --accent-2:#E08F52; --accent-2-soft:#2E241C;
+    --danger:#E17A63; --danger-soft:#2E1F1C;
+    --ok:#4FB39E; --ok-soft:#1C2E2A;
+    --border:#263330;
+    --code-bg:#0C1413; --code-text:#CFE0DB;
+    --shadow:0 1px 2px rgba(0,0,0,.35), 0 10px 30px -14px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'Lexend',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  }
+  .mono{font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace; font-variant-numeric:tabular-nums;}
+  h1,h2,h3{font-weight:600; letter-spacing:-.01em;}
+
+  .shell{display:flex; min-height:100vh; max-width:1280px; margin:0 auto;}
+
+  /* ---------- sidebar ---------- */
+  .sidebar{
+    width:240px; flex:0 0 240px; border-right:1px solid var(--border);
+    padding:18px 14px; position:sticky; top:0; align-self:flex-start; height:100vh;
+    overflow-y:auto; display:flex; flex-direction:column; gap:16px;
+  }
+  .brand{display:flex; align-items:center; gap:10px; padding:4px 8px 10px;}
+  .brand .mark{
+    width:34px; height:34px; border-radius:9px; background:var(--accent); color:var(--accent-ink);
+    display:flex; align-items:center; justify-content:center; flex:0 0 auto;
+  }
+  .brand .mark svg{width:19px; height:19px;}
+  .brand .name{font-size:15px; font-weight:700; line-height:1.2;}
+  .brand .sub{font-size:11px; color:var(--text-muted); font-family:'IBM Plex Mono',monospace;}
+
+  .patient-card{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:var(--radius);
+    padding:12px; display:flex; gap:10px; align-items:center;
+  }
+  .avatar{
+    width:38px; height:38px; border-radius:50%; background:var(--accent); color:var(--accent-ink);
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; flex:0 0 auto;
+  }
+  .patient-card .who{min-width:0;}
+  .patient-card .who .nm{font-size:13.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .patient-card .who .mrn{font-size:10.5px; color:var(--text-muted); font-family:'IBM Plex Mono',monospace;}
+
+  nav.topics{display:flex; flex-direction:column; gap:2px; margin-top:2px;}
+  .nav-btn{
+    all:unset; cursor:pointer; padding:9px 10px; border-radius:9px;
+    font-size:13.5px; color:var(--text-muted); display:flex; align-items:center; gap:10px; font-weight:600;
+  }
+  .nav-btn svg{width:16px; height:16px; flex:0 0 auto; opacity:.75;}
+  .nav-btn .badge{
+    margin-left:auto; background:var(--accent-2); color:#fff; font-size:10px; font-weight:800;
+    min-width:16px; height:16px; border-radius:99px; display:flex; align-items:center; justify-content:center; padding:0 4px;
+  }
+  .nav-btn:hover{background:var(--surface-2); color:var(--text);}
+  .nav-btn.active{background:var(--accent-soft); color:var(--accent);}
+  .nav-btn.active svg{opacity:1;}
+
+  .sidebar-foot{margin-top:auto; font-size:10.5px; color:var(--text-muted); padding:10px 8px; line-height:1.6; border-top:1px solid var(--border);}
+
+  main{flex:1; min-width:0; padding:26px 32px 70px;}
+  .topbar{display:flex; align-items:center; justify-content:space-between; margin-bottom:22px; gap:12px; flex-wrap:wrap;}
+  .topbar h2{font-size:23px; margin:0;}
+  .topbar p{margin:3px 0 0; color:var(--text-muted); font-size:13.5px;}
+
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .grid4{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px;}
+  .grid2{display:grid; grid-template-columns:1.3fr 1fr; gap:16px;}
+  @media (max-width:980px){ .grid4{grid-template-columns:repeat(2,1fr);} .grid2{grid-template-columns:1fr;} }
+
+  .stat{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px;
+    box-shadow:var(--shadow);
+  }
+  .stat .lbl{font-size:11px; color:var(--text-muted); font-family:'IBM Plex Mono',monospace; text-transform:uppercase; letter-spacing:.04em;}
+  .stat .val{font-size:21px; font-weight:700; margin-top:6px; font-family:'IBM Plex Mono',monospace;}
+  .stat .sub{font-size:12px; color:var(--text-muted); margin-top:3px;}
+
+  .card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:18px 20px; margin-bottom:14px; box-shadow:var(--shadow);
+  }
+  .card-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; gap:10px;}
+  .card-head h3{font-size:15px; margin:0;}
+  .card-head .muted{font-size:12px; color:var(--text-muted);}
+
+  .btn{
+    all:unset; cursor:pointer; font-size:12.5px; font-weight:700; padding:8px 14px; border-radius:8px;
+    background:var(--accent); color:var(--accent-ink); text-align:center; white-space:nowrap;
+  }
+  .btn:hover{filter:brightness(1.05);}
+  .btn.ghost{background:var(--surface-2); color:var(--text); border:1px solid var(--border);}
+  .btn.danger{background:var(--danger-soft); color:var(--danger); border:1px solid color-mix(in srgb, var(--danger) 35%, var(--border));}
+  .btn.sm{padding:6px 11px; font-size:11.5px;}
+  .btn[disabled]{opacity:.55; cursor:default;}
+
+  .pill{
+    font-size:11px; font-weight:700; padding:3px 9px; border-radius:99px; font-family:'IBM Plex Mono',monospace;
+    display:inline-flex; align-items:center; gap:5px;
+  }
+  .pill.ok{background:var(--ok-soft); color:var(--ok);}
+  .pill.pending{background:var(--accent-2-soft); color:var(--accent-2);}
+  .pill.done{background:var(--surface-2); color:var(--text-muted);}
+  .pill.danger{background:var(--danger-soft); color:var(--danger);}
+
+  /* appointments / list rows */
+  .row-item{
+    display:flex; align-items:center; gap:14px; padding:12px 10px; border-radius:10px; border:1px solid transparent;
+  }
+  .row-item:hover{background:var(--surface-2);}
+  .row-item + .row-item{border-top:1px solid var(--border);}
+  .row-item .icon{
+    width:40px; height:40px; border-radius:10px; background:var(--accent-soft); color:var(--accent);
+    display:flex; align-items:center; justify-content:center; flex:0 0 auto;
+  }
+  .row-item .icon svg{width:19px;height:19px;}
+  .row-item .info{flex:1; min-width:0;}
+  .row-item .info .t1{font-size:13.5px; font-weight:700;}
+  .row-item .info .t2{font-size:12px; color:var(--text-muted); margin-top:2px;}
+  .row-item .meta{text-align:right; flex:0 0 auto; display:flex; flex-direction:column; align-items:flex-end; gap:6px;}
+  .row-item .meta .when{font-size:12px; font-family:'IBM Plex Mono',monospace; color:var(--text-muted);}
+
+  /* form */
+  .form-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+  @media (max-width:640px){ .form-grid{grid-template-columns:1fr;} }
+  .field{display:flex; flex-direction:column; gap:5px; margin-bottom:12px;}
+  .field.full{grid-column:1/-1;}
+  .field label{font-size:12px; font-weight:700; color:var(--text-muted);}
+  .field input, .field select, .field textarea{
+    background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:9px 11px;
+    font-family:inherit; font-size:13px; color:var(--text);
+  }
+  .field textarea{resize:vertical; min-height:64px;}
+  .field input:focus, .field select:focus, .field textarea:focus{outline:2px solid var(--accent); outline-offset:1px;}
+
+  /* meds */
+  .med-card{
+    border:1px solid var(--border); border-radius:10px; padding:14px 16px; margin-bottom:10px; background:var(--surface-2);
+    display:flex; justify-content:space-between; gap:14px; align-items:center;
+  }
+  .med-card .name{font-size:14px; font-weight:700;}
+  .med-card .detail{font-size:12px; color:var(--text-muted); margin-top:3px;}
+  .med-card .refills{font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--text-muted); margin-top:6px;}
+  .med-card .actions{flex:0 0 auto; display:flex; flex-direction:column; align-items:flex-end; gap:8px;}
+
+  /* messages */
+  .msg-shell{display:grid; grid-template-columns:220px 1fr; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); background:var(--surface);}
+  @media (max-width:760px){ .msg-shell{grid-template-columns:1fr;} .thread-list{display:none;} }
+  .thread-list{border-right:1px solid var(--border); background:var(--surface-2);}
+  .thread-item{padding:13px 14px; border-bottom:1px solid var(--border); cursor:pointer;}
+  .thread-item.active{background:var(--accent-soft);}
+  .thread-item .t1{font-size:13px; font-weight:700;}
+  .thread-item .t2{font-size:11.5px; color:var(--text-muted); margin-top:2px;}
+  .msg-panel{display:flex; flex-direction:column; height:520px;}
+  .msg-panel-head{padding:13px 16px; border-bottom:1px solid var(--border); font-size:13.5px; font-weight:700;}
+  .msg-log{flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:10px;}
+  .bubble{max-width:72%; padding:9px 13px; border-radius:14px; font-size:13px; line-height:1.5;}
+  .bubble.them{background:var(--surface-2); align-self:flex-start; border-bottom-left-radius:4px;}
+  .bubble.me{background:var(--accent); color:var(--accent-ink); align-self:flex-end; border-bottom-right-radius:4px;}
+  .bubble.system{background:transparent; align-self:center; color:var(--text-muted); font-size:11.5px; font-family:'IBM Plex Mono',monospace; text-align:center; max-width:90%;}
+  .bubble .time{font-size:10px; opacity:.65; margin-top:4px; display:block;}
+  .msg-input{display:flex; gap:8px; padding:12px; border-top:1px solid var(--border);}
+  .msg-input input{flex:1; background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:9px 12px; font-family:inherit; font-size:13px; color:var(--text);}
+
+  /* vitals */
+  .tab-row{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;}
+  .tab-btn{
+    all:unset; cursor:pointer; font-size:12px; font-weight:700; padding:7px 13px; border-radius:99px;
+    background:var(--surface-2); border:1px solid var(--border); color:var(--text-muted);
+  }
+  .tab-btn.active{background:var(--accent); color:var(--accent-ink); border-color:transparent;}
+  .chart-wrap{background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:14px;}
+  .chart-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px;}
+  .chart-top .big{font-size:26px; font-weight:700; font-family:'IBM Plex Mono',monospace;}
+  .chart-top .unit{font-size:12px; color:var(--text-muted);}
+  svg.chart{width:100%; height:150px; display:block;}
+
+  table.records{width:100%; border-collapse:collapse; font-size:13px;}
+  table.records th{
+    text-align:left; font-size:11px; color:var(--text-muted); font-weight:700; text-transform:uppercase; letter-spacing:.04em;
+    padding:0 10px 8px; border-bottom:1px solid var(--border);
+  }
+  table.records td{padding:11px 10px; border-bottom:1px solid var(--border); vertical-align:top;}
+  table.records tr:last-child td{border-bottom:none;}
+  .table-wrap{overflow-x:auto;}
+
+  .profile-grid{display:grid; grid-template-columns:1fr 1fr; gap:14px 24px;}
+  @media (max-width:640px){ .profile-grid{grid-template-columns:1fr;} }
+  .pf-field .k{font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em; font-family:'IBM Plex Mono',monospace;}
+  .pf-field .v{font-size:14px; margin-top:3px;}
+
+  .disclaimer{
+    margin-top:26px; padding:14px 16px; border:1px dashed var(--border); border-radius:10px;
+    font-size:11.5px; color:var(--text-muted); line-height:1.65; background:var(--surface-2);
+  }
+
+  @media (max-width:860px){
+    .shell{flex-direction:column;}
+    .sidebar{position:sticky; top:0; z-index:5; width:100%; height:auto; flex:none; border-right:none; border-bottom:1px solid var(--border); padding:12px 14px;}
+    .patient-card{display:none;}
+    nav.topics{flex-direction:row; overflow-x:auto; gap:6px; padding-bottom:2px;}
+    .nav-btn{white-space:nowrap; flex:0 0 auto;}
+    .nav-btn .badge{margin-left:4px;}
+    .sidebar-foot{display:none;}
+    main{padding:18px 16px 50px;}
+  }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg></div>
+      <div><div class="name">Harborview</div><div class="sub">PATIENT PORTAL</div></div>
+    </div>
+
+    <div class="patient-card">
+      <div class="avatar">AR</div>
+      <div class="who">
+        <div class="nm">Alex Rivera</div>
+        <div class="mrn">MRN 20481-77</div>
+      </div>
+    </div>
+
+    <nav class="topics" id="topicNav">
+      <button class="nav-btn active" data-view="dashboard"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="13" y="3" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="3" y="13" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.8"/><rect x="13" y="13" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.8"/></svg>Dashboard</button>
+      <button class="nav-btn" data-view="appointments"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4.5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M3 9.5h18M8 3v3M16 3v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Appointments</button>
+      <button class="nav-btn" data-view="records"><svg viewBox="0 0 24 24" fill="none"><path d="M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.8"/><path d="M9 12h6M9 16h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Medical Records</button>
+      <button class="nav-btn" data-view="prescriptions"><svg viewBox="0 0 24 24" fill="none"><path d="M10.5 3.5 20.5 13.5a4.5 4.5 0 1 1-6.36 6.36L3.5 9.86a4.5 4.5 0 0 1 7-6.36Z" stroke="currentColor" stroke-width="1.8"/><path d="M8.5 8.5l5 5" stroke="currentColor" stroke-width="1.8"/></svg>Prescriptions</button>
+      <button class="nav-btn" data-view="messages"><svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H8l-4 3V6a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.8"/></svg>Messages<span class="badge" id="msgBadge">1</span></button>
+      <button class="nav-btn" data-view="vitals"><svg viewBox="0 0 24 24" fill="none"><path d="M3 12h4l2-7 4 14 2-7h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Vitals</button>
+      <button class="nav-btn" data-view="profile"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.4-3.8 4.5-5.8 7.5-5.8s6.1 2 7.5 5.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Profile</button>
+    </nav>
+
+    <div class="sidebar-foot">Demo data only — not a real medical record. Nothing here is stored beyond this browser.</div>
+  </aside>
+
+  <main>
+    <!-- DASHBOARD -->
+    <section class="view active" id="view-dashboard">
+      <div class="topbar">
+        <div><h2>Good to see you, Alex</h2><p id="todayLine">—</p></div>
+        <button class="btn" data-goto="appointments">+ Book appointment</button>
+      </div>
+
+      <div class="grid4">
+        <div class="stat">
+          <div class="lbl">Next appointment</div>
+          <div class="val" style="font-size:15px;">Oct 6, 10:30 AM</div>
+          <div class="sub">Dr. Patel · Cardiology</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Active prescriptions</div>
+          <div class="val">3</div>
+          <div class="sub">1 refill due soon</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Unread messages</div>
+          <div class="val" id="dashUnread">1</div>
+          <div class="sub">From your care team</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">Latest blood pressure</div>
+          <div class="val">118/76</div>
+          <div class="sub">Logged Sep 24</div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-head"><h3>Upcoming appointments</h3><span class="muted">2 scheduled</span></div>
+          <div id="dashApptList"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Recent activity</h3></div>
+          <div class="row-item">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+            <div class="info"><div class="t1">Lab results ready</div><div class="t2">Lipid Panel · Aug 18</div></div>
+          </div>
+          <div class="row-item">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none"><path d="M10.5 3.5 20.5 13.5a4.5 4.5 0 1 1-6.36 6.36L3.5 9.86a4.5 4.5 0 0 1 7-6.36Z" stroke="currentColor" stroke-width="1.8"/></svg></div>
+            <div class="info"><div class="t1">Atorvastatin refilled</div><div class="t2">1 refill remaining</div></div>
+          </div>
+          <div class="row-item">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H8l-4 3V6a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.8"/></svg></div>
+            <div class="info"><div class="t1">New message from Dr. Patel's office</div><div class="t2">Sep 26</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- APPOINTMENTS -->
+    <section class="view" id="view-appointments">
+      <div class="topbar"><div><h2>Appointments</h2><p>Manage upcoming visits or book a new one.</p></div></div>
+
+      <div class="card">
+        <div class="card-head"><h3>Upcoming</h3></div>
+        <div id="apptUpcoming"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Book a new appointment</h3></div>
+        <div class="form-grid">
+          <div class="field"><label>Department</label>
+            <select id="fDept">
+              <option>Primary Care</option><option>Cardiology</option><option>Dermatology</option>
+              <option>Orthopedics</option><option>Behavioral Health</option>
+            </select>
+          </div>
+          <div class="field"><label>Provider</label>
+            <select id="fDoc">
+              <option>Any available provider</option><option>Dr. Patel</option><option>Dr. Nakamura</option><option>Dr. Obi</option>
+            </select>
+          </div>
+          <div class="field"><label>Date</label><input type="date" id="fDate"></div>
+          <div class="field"><label>Time</label>
+            <select id="fTime">
+              <option>9:00 AM</option><option>10:30 AM</option><option>1:00 PM</option><option>2:30 PM</option><option>4:00 PM</option>
+            </select>
+          </div>
+          <div class="field full"><label>Visit type</label>
+            <select id="fType"><option>In-person</option><option>Telehealth</option></select>
+          </div>
+          <div class="field full"><label>Reason for visit</label>
+            <textarea id="fReason" placeholder="Briefly describe what you'd like to discuss"></textarea>
+          </div>
+        </div>
+        <button class="btn" id="btnBook">Request appointment</button>
+        <span class="muted" style="font-size:12px; margin-left:10px;">Requests are confirmed by the office within 1 business day.</span>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Past visits</h3></div>
+        <div id="apptPast"></div>
+      </div>
+    </section>
+
+    <!-- RECORDS -->
+    <section class="view" id="view-records">
+      <div class="topbar"><div><h2>Medical Records</h2><p>Visit history and lab/imaging documents.</p></div></div>
+
+      <div class="card">
+        <div class="card-head"><h3>Visit history</h3></div>
+        <div class="table-wrap">
+          <table class="records">
+            <thead><tr><th>Date</th><th>Provider</th><th>Reason</th><th>Summary</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">Aug 18, 2026</td><td>Dr. Patel · Cardiology</td><td>Follow-up, blood pressure check</td><td>BP well-controlled on current dose. Continue Lisinopril 10mg.</td></tr>
+              <tr><td class="mono">Jul 02, 2026</td><td>Dr. Obi · Primary Care</td><td>Annual physical</td><td>Overall stable. Ordered lipid panel and metabolic panel.</td></tr>
+              <tr><td class="mono">Mar 11, 2026</td><td>Dr. Obi · Primary Care</td><td>Seasonal allergies</td><td>Prescribed short course of antihistamines.</td></tr>
+              <tr><td class="mono">Jan 22, 2026</td><td>Dr. Nakamura · Dermatology</td><td>Skin check</td><td>No concerning findings. Routine follow-up in 12 months.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Lab &amp; imaging documents</h3></div>
+        <div id="docList"></div>
+      </div>
+    </section>
+
+    <!-- PRESCRIPTIONS -->
+    <section class="view" id="view-prescriptions">
+      <div class="topbar"><div><h2>Prescriptions</h2><p>Current medications and refill requests.</p></div></div>
+
+      <div class="card">
+        <div class="card-head"><h3>Active medications</h3></div>
+        <div id="medActive"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Past medications</h3></div>
+        <div class="med-card" style="opacity:.7;">
+          <div>
+            <div class="name">Amoxicillin 500mg</div>
+            <div class="detail">3x daily · prescribed by Dr. Obi · completed course</div>
+          </div>
+          <span class="pill done">Completed</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- MESSAGES -->
+    <section class="view" id="view-messages">
+      <div class="topbar"><div><h2>Messages</h2><p>Secure messages with your care team.</p></div></div>
+
+      <div class="msg-shell">
+        <div class="thread-list">
+          <div class="thread-item active">
+            <div class="t1">Dr. Patel's Office</div>
+            <div class="t2">Cardiology · last reply Sep 26</div>
+          </div>
+          <div class="thread-item">
+            <div class="t1">Pharmacy</div>
+            <div class="t2">Refill notifications</div>
+          </div>
+          <div class="thread-item">
+            <div class="t1">Billing</div>
+            <div class="t2">No new messages</div>
+          </div>
+        </div>
+        <div class="msg-panel">
+          <div class="msg-panel-head">Dr. Patel's Office · Cardiology</div>
+          <div class="msg-log" id="msgLog"></div>
+          <div class="msg-input">
+            <input type="text" id="msgInput" placeholder="Type a message to your care team…">
+            <button class="btn" id="btnSend">Send</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VITALS -->
+    <section class="view" id="view-vitals">
+      <div class="topbar"><div><h2>Vitals &amp; Health Tracker</h2><p>Log readings and watch your trends over time.</p></div></div>
+
+      <div class="card">
+        <div class="tab-row" id="vitalsTabs">
+          <button class="tab-btn active" data-metric="bp">Blood pressure</button>
+          <button class="tab-btn" data-metric="weight">Weight</button>
+          <button class="tab-btn" data-metric="glucose">Glucose</button>
+          <button class="tab-btn" data-metric="hr">Heart rate</button>
+        </div>
+        <div class="chart-wrap">
+          <div class="chart-top">
+            <div><span class="big mono" id="chartBig">—</span> <span class="unit" id="chartUnit"></span></div>
+            <span class="muted" style="font-size:12px;" id="chartRange"></span>
+          </div>
+          <svg class="chart" id="chartSvg" viewBox="0 0 600 150" preserveAspectRatio="none"></svg>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-head"><h3>Log a new reading</h3></div>
+          <div class="field"><label>Metric</label>
+            <select id="vMetric">
+              <option value="bp">Blood pressure</option>
+              <option value="weight">Weight (lb)</option>
+              <option value="glucose">Glucose (mg/dL)</option>
+              <option value="hr">Heart rate (bpm)</option>
+            </select>
+          </div>
+          <div class="form-grid" id="vFieldsBP">
+            <div class="field"><label>Systolic</label><input type="number" id="vSys" placeholder="e.g. 118"></div>
+            <div class="field"><label>Diastolic</label><input type="number" id="vDia" placeholder="e.g. 76"></div>
+          </div>
+          <div class="field" id="vFieldsSingle" style="display:none;"><label id="vSingleLabel">Value</label><input type="number" id="vSingle" placeholder="Value"></div>
+          <button class="btn" id="btnLogVital">Add reading</button>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Recent readings</h3></div>
+          <div id="vitalsTable"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section class="view" id="view-profile">
+      <div class="topbar"><div><h2>Profile</h2><p>Your personal and insurance information.</p></div></div>
+
+      <div class="card">
+        <div class="card-head"><h3>Personal details</h3></div>
+        <div class="profile-grid">
+          <div class="pf-field"><div class="k">Full name</div><div class="v">Alex Rivera</div></div>
+          <div class="pf-field"><div class="k">Date of birth</div><div class="v mono">04/12/1990</div></div>
+          <div class="pf-field"><div class="k">MRN</div><div class="v mono">20481-77</div></div>
+          <div class="pf-field"><div class="k">Phone</div><div class="v mono">(555) 219-4482</div></div>
+          <div class="pf-field"><div class="k">Email</div><div class="v">alex.rivera@example.com</div></div>
+          <div class="pf-field"><div class="k">Address</div><div class="v">412 Elm Street, Riverside, CA</div></div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-head"><h3>Insurance</h3></div>
+          <div class="pf-field" style="margin-bottom:10px;"><div class="k">Plan</div><div class="v">Harborview Health PPO</div></div>
+          <div class="pf-field" style="margin-bottom:10px;"><div class="k">Member ID</div><div class="v mono">HHP-88213904</div></div>
+          <div class="pf-field"><div class="k">Group number</div><div class="v mono">GRP-4471</div></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Emergency contact</h3></div>
+          <div class="pf-field" style="margin-bottom:10px;"><div class="k">Name</div><div class="v">Jordan Rivera (spouse)</div></div>
+          <div class="pf-field"><div class="k">Phone</div><div class="v mono">(555) 219-7731</div></div>
+        </div>
+      </div>
+
+      <div class="disclaimer">This is a demo application with fictional sample data for illustration purposes. It is not connected to any real health record system and should not be used to store, view, or manage real patient information.</div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function(){
+  try{
+    var qs = new URLSearchParams(location.search);
+    var t = qs.get('theme');
+    if(t === 'dark' || t === 'light'){ document.documentElement.setAttribute('data-theme', t); }
+  }catch(e){}
+
+  var todayLine = document.getElementById('todayLine');
+  var TODAY = new Date('2026-09-29T12:00:00');
+  todayLine.textContent = TODAY.toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'});
+
+  // ---------------- nav ----------------
+  var navBtns = document.querySelectorAll('.nav-btn[data-view]');
+  var views = document.querySelectorAll('.view');
+  function goto(view){
+    navBtns.forEach(function(b){ b.classList.toggle('active', b.dataset.view===view); });
+    views.forEach(function(v){ v.classList.remove('active'); });
+    document.getElementById('view-'+view).classList.add('active');
+    window.scrollTo({top:0, behavior:'instant'});
+  }
+  navBtns.forEach(function(btn){ btn.addEventListener('click', function(){ goto(btn.dataset.view); }); });
+  document.querySelectorAll('[data-goto]').forEach(function(b){ b.addEventListener('click', function(){ goto(b.dataset.goto); }); });
+
+  // ---------------- persistence ----------------
+  var STORE_KEY = 'harborviewDemo_v1';
+  function loadStore(){
+    try{ return JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); }catch(e){ return {}; }
+  }
+  function saveStore(s){
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(s)); }catch(e){}
+  }
+  var store = loadStore();
+
+  // ---------------- seed data ----------------
+  var seedAppts = [
+    {id:'a1', doc:'Dr. Patel', dept:'Cardiology', date:'2026-10-06', time:'10:30 AM', type:'Telehealth', status:'confirmed', upcoming:true},
+    {id:'a2', doc:'Dr. Nakamura', dept:'Dermatology', date:'2026-10-14', time:'2:00 PM', type:'In-person · Suite 210', status:'confirmed', upcoming:true},
+    {id:'a3', doc:'Dr. Patel', dept:'Cardiology', date:'2026-08-18', time:'10:00 AM', type:'In-person', status:'completed', upcoming:false},
+    {id:'a4', doc:'Dr. Obi', dept:'Primary Care', date:'2026-07-02', time:'9:00 AM', type:'In-person', status:'completed', upcoming:false}
+  ];
+  var appts = store.appts || seedAppts.slice();
+
+  var seedMeds = [
+    {id:'m1', name:'Lisinopril 10mg', freq:'Once daily, morning', doc:'Dr. Patel', refills:2, status:'active'},
+    {id:'m2', name:'Atorvastatin 20mg', freq:'Once daily, evening', doc:'Dr. Patel', refills:1, status:'active'},
+    {id:'m3', name:'Albuterol Inhaler', freq:'As needed', doc:'Dr. Obi', refills:3, status:'active'}
+  ];
+  var meds = store.meds || seedMeds.slice();
+
+  var seedDocs = [
+    {name:'Lipid Panel', date:'2026-08-18', status:'ready'},
+    {name:'ECG Summary', date:'2026-08-18', status:'ready'},
+    {name:'Basic Metabolic Panel', date:'2026-07-02', status:'ready'},
+    {name:'Allergy Skin Test', date:'2026-10-14', status:'pending'}
+  ];
+
+  var seedVitals = {
+    bp: [
+      {date:'2026-08-01', sys:124, dia:80},{date:'2026-08-08', sys:121, dia:79},
+      {date:'2026-08-15', sys:122, dia:78},{date:'2026-08-22', sys:119, dia:77},
+      {date:'2026-09-05', sys:120, dia:78},{date:'2026-09-12', sys:117, dia:75},
+      {date:'2026-09-19', sys:119, dia:76},{date:'2026-09-24', sys:118, dia:76}
+    ],
+    weight: [
+      {date:'2026-08-01', v:171},{date:'2026-08-08', v:170},{date:'2026-08-15', v:170},
+      {date:'2026-08-22', v:169},{date:'2026-09-05', v:168},{date:'2026-09-12', v:168},
+      {date:'2026-09-19', v:167},{date:'2026-09-24', v:166.5}
+    ],
+    glucose: [
+      {date:'2026-08-01', v:96},{date:'2026-08-08', v:101},{date:'2026-08-15', v:94},
+      {date:'2026-08-22', v:98},{date:'2026-09-05', v:92},{date:'2026-09-12', v:97},
+      {date:'2026-09-19', v:95},{date:'2026-09-24', v:93}
+    ],
+    hr: [
+      {date:'2026-08-01', v:74},{date:'2026-08-08', v:72},{date:'2026-08-15', v:75},
+      {date:'2026-08-22', v:71},{date:'2026-09-05', v:70},{date:'2026-09-12', v:73},
+      {date:'2026-09-19', v:69},{date:'2026-09-24', v:71}
+    ]
+  };
+  var vitals = store.vitals || seedVitals;
+
+  var seedMsgs = [
+    {from:'them', text:'Hi Alex, this is a reminder that your cardiology follow-up is confirmed for October 6th at 10:30 AM (telehealth).', time:'Sep 20, 3:12 PM'},
+    {from:'me', text:'Thanks — will this visit cover my recent blood pressure readings too?', time:'Sep 21, 9:04 AM'},
+    {from:'them', text:'Yes, Dr. Patel will review your last 8 weeks of readings during the visit. Feel free to log any new ones before then.', time:'Sep 26, 11:47 AM'}
+  ];
+  var msgs = store.msgs || seedMsgs.slice();
+  var unread = store.unread != null ? store.unread : 1;
+
+  function persist(){
+    saveStore({appts:appts, meds:meds, vitals:vitals, msgs:msgs, unread:unread});
+  }
+
+  function fmtDate(iso){
+    var d = new Date(iso+'T12:00:00');
+    return d.toLocaleDateString(undefined,{month:'short', day:'numeric', year:'numeric'});
+  }
+
+  // ---------------- appointments render ----------------
+  var apptIconSvg = '<svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4.5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M3 9.5h18M8 3v3M16 3v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+
+  function renderAppts(){
+    var upcoming = appts.filter(function(a){ return a.status!=='cancelled' && a.status!=='completed'; })
+                         .sort(function(a,b){ return a.date.localeCompare(b.date); });
+    var past = appts.filter(function(a){ return a.status==='completed' || a.status==='cancelled'; })
+                     .sort(function(a,b){ return b.date.localeCompare(a.date); });
+
+    function row(a, withActions){
+      var statusPill = a.status==='confirmed' ? '<span class="pill ok">Confirmed</span>'
+                      : a.status==='pending' ? '<span class="pill pending">Pending</span>'
+                      : a.status==='cancelled' ? '<span class="pill danger">Cancelled</span>'
+                      : '<span class="pill done">Completed</span>';
+      var actions = withActions && a.status!=='cancelled'
+        ? '<button class="btn ghost sm" data-cancel="'+a.id+'" style="margin-top:2px;">Cancel</button>' : '';
+      return '<div class="row-item">'
+        + '<div class="icon">'+apptIconSvg+'</div>'
+        + '<div class="info"><div class="t1">'+a.doc+' · '+a.dept+'</div><div class="t2">'+a.type+'</div></div>'
+        + '<div class="meta"><span class="when">'+fmtDate(a.date)+' · '+a.time+'</span>'+statusPill+actions+'</div>'
+        + '</div>';
+    }
+
+    var upcHtml = upcoming.length ? upcoming.map(function(a){ return row(a, true); }).join('') : '<p class="muted" style="font-size:13px;">No upcoming appointments.</p>';
+    document.getElementById('apptUpcoming').innerHTML = upcHtml;
+    document.getElementById('dashApptList').innerHTML = upcoming.slice(0,3).map(function(a){ return row(a,false); }).join('') || '<p class="muted" style="font-size:13px;">No upcoming appointments.</p>';
+    document.getElementById('apptPast').innerHTML = past.map(function(a){ return row(a,false); }).join('');
+
+    document.querySelectorAll('[data-cancel]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.dataset.cancel;
+        appts = appts.map(function(a){ return a.id===id ? Object.assign({},a,{status:'cancelled'}) : a; });
+        persist(); renderAppts();
+      });
+    });
+  }
+
+  document.getElementById('btnBook').addEventListener('click', function(){
+    var date = document.getElementById('fDate').value;
+    if(!date){ document.getElementById('fDate').focus(); return; }
+    var id = 'a'+Date.now();
+    appts.push({
+      id:id,
+      doc: document.getElementById('fDoc').value,
+      dept: document.getElementById('fDept').value,
+      date: date,
+      time: document.getElementById('fTime').value,
+      type: document.getElementById('fType').value,
+      status:'pending', upcoming:true
+    });
+    persist(); renderAppts();
+    document.getElementById('fReason').value='';
+    document.getElementById('fDate').value='';
+  });
+
+  // ---------------- documents ----------------
+  function renderDocs(){
+    var docIcon = '<svg viewBox="0 0 24 24" fill="none"><path d="M6 3h9l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.8"/></svg>';
+    document.getElementById('docList').innerHTML = seedDocs.map(function(d){
+      var pill = d.status==='ready' ? '<span class="pill ok">Ready</span>' : '<span class="pill pending">Pending</span>';
+      return '<div class="row-item"><div class="icon">'+docIcon+'</div>'
+        + '<div class="info"><div class="t1">'+d.name+'</div><div class="t2">'+fmtDate(d.date)+'</div></div>'
+        + '<div class="meta">'+pill+(d.status==='ready' ? '<button class="btn ghost sm">View</button>' : '')+'</div></div>';
+    }).join('');
+  }
+
+  // ---------------- prescriptions ----------------
+  function renderMeds(){
+    document.getElementById('medActive').innerHTML = meds.map(function(m){
+      var lowRefill = m.refills <= 1;
+      var actionHtml = m.status==='requested'
+        ? '<span class="pill pending">Refill requested</span>'
+        : '<button class="btn '+(lowRefill?'':'ghost')+' sm" data-refill="'+m.id+'">Request refill</button>';
+      return '<div class="med-card">'
+        + '<div><div class="name">'+m.name+'</div><div class="detail">'+m.freq+' · prescribed by '+m.doc+'</div>'
+        + '<div class="refills">'+m.refills+' refill'+(m.refills===1?'':'s')+' remaining</div></div>'
+        + '<div class="actions">'+actionHtml+'</div></div>';
+    }).join('');
+
+    document.querySelectorAll('[data-refill]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var id = btn.dataset.refill;
+        meds = meds.map(function(m){ return m.id===id ? Object.assign({},m,{status:'requested'}) : m; });
+        persist(); renderMeds();
+      });
+    });
+  }
+
+  // ---------------- messages ----------------
+  function renderMsgs(){
+    var log = document.getElementById('msgLog');
+    log.innerHTML = msgs.map(function(m){
+      var cls = m.from==='me' ? 'me' : (m.from==='system' ? 'system' : 'them');
+      if(m.from==='system'){ return '<div class="bubble system">'+m.text+'</div>'; }
+      return '<div class="bubble '+cls+'">'+m.text+'<span class="time">'+m.time+'</span></div>';
+    }).join('');
+    log.scrollTop = log.scrollHeight;
+    document.getElementById('msgBadge').textContent = unread;
+    document.getElementById('msgBadge').style.display = unread>0 ? 'flex' : 'none';
+    document.getElementById('dashUnread').textContent = unread;
+  }
+  function sendMsg(){
+    var input = document.getElementById('msgInput');
+    var text = input.value.trim();
+    if(!text) return;
+    var now = new Date();
+    msgs.push({from:'me', text:text, time:now.toLocaleDateString(undefined,{month:'short',day:'numeric'})+', '+now.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})});
+    input.value='';
+    persist(); renderMsgs();
+    setTimeout(function(){
+      msgs.push({from:'system', text:'Message sent. Your care team typically responds within 1 business day.'});
+      persist(); renderMsgs();
+    }, 500);
+  }
+  document.getElementById('btnSend').addEventListener('click', sendMsg);
+  document.getElementById('msgInput').addEventListener('keydown', function(e){ if(e.key==='Enter') sendMsg(); });
+  document.querySelectorAll('.thread-item').forEach(function(t){
+    t.addEventListener('click', function(){
+      document.querySelectorAll('.thread-item').forEach(function(x){x.classList.remove('active');});
+      t.classList.add('active');
+    });
+  });
+
+  // ---------------- vitals chart ----------------
+  var metricMeta = {
+    bp:{unit:'mmHg', label:'Blood pressure'},
+    weight:{unit:'lb', label:'Weight'},
+    glucose:{unit:'mg/dL', label:'Glucose'},
+    hr:{unit:'bpm', label:'Heart rate'}
+  };
+  var currentMetric = 'bp';
+
+  function drawChart(metric){
+    var data = vitals[metric] || [];
+    var svg = document.getElementById('chartSvg');
+    var W=600,H=150,padL=34,padR=10,padT=14,padB=22;
+    if(!data.length){ svg.innerHTML=''; return; }
+
+    var isBP = metric==='bp';
+    var vals = isBP ? data.map(function(d){return d.sys;}).concat(data.map(function(d){return d.dia;})) : data.map(function(d){return d.v;});
+    var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+    var span = (max-min) || 1;
+    min -= span*0.15; max += span*0.15;
+
+    function x(i){ return padL + (i/(data.length-1||1)) * (W-padL-padR); }
+    function y(v){ return H-padB - ((v-min)/(max-min)) * (H-padT-padB); }
+
+    function pathFor(key){
+      return data.map(function(d,i){ return (i===0?'M':'L')+x(i).toFixed(1)+','+y(d[key]).toFixed(1); }).join(' ');
+    }
+    function dotsFor(key, color){
+      return data.map(function(d,i){ return '<circle cx="'+x(i).toFixed(1)+'" cy="'+y(d[key]).toFixed(1)+'" r="2.6" fill="'+color+'"/>'; }).join('');
+    }
+
+    var gridLines='';
+    for(var g=0; g<3; g++){
+      var gy = padT + g*((H-padT-padB)/2);
+      gridLines += '<line x1="'+padL+'" y1="'+gy.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+gy.toFixed(1)+'" stroke="var(--border)" stroke-width="1"/>';
+    }
+
+    var lastLabel = data[data.length-1];
+    var xLabels = '<text x="'+padL+'" y="'+(H-4)+'" font-size="9" fill="var(--text-muted)" font-family="IBM Plex Mono, monospace">'+fmtDate(data[0].date)+'</text>'
+      + '<text x="'+(W-padR)+'" y="'+(H-4)+'" text-anchor="end" font-size="9" fill="var(--text-muted)" font-family="IBM Plex Mono, monospace">'+fmtDate(lastLabel.date)+'</text>';
+
+    var svgContent = gridLines;
+    if(isBP){
+      svgContent += '<path d="'+pathFor('sys')+'" fill="none" stroke="var(--accent)" stroke-width="2"/>' + dotsFor('sys','var(--accent)');
+      svgContent += '<path d="'+pathFor('dia')+'" fill="none" stroke="var(--accent-2)" stroke-width="2" stroke-dasharray="4 3"/>' + dotsFor('dia','var(--accent-2)');
+      svgContent += '<text x="'+(W-padR)+'" y="14" text-anchor="end" font-size="9" fill="var(--accent)" font-family="IBM Plex Mono, monospace">● systolic</text>';
+      svgContent += '<text x="'+(W-padR)+'" y="26" text-anchor="end" font-size="9" fill="var(--accent-2)" font-family="IBM Plex Mono, monospace">- - diastolic</text>';
+    } else {
+      svgContent += '<path d="'+pathFor('v')+'" fill="none" stroke="var(--accent)" stroke-width="2"/>' + dotsFor('v','var(--accent)');
+    }
+    svgContent += xLabels;
+    svg.innerHTML = svgContent;
+
+    var meta = metricMeta[metric];
+    document.getElementById('chartUnit').textContent = meta.unit;
+    document.getElementById('chartRange').textContent = fmtDate(data[0].date)+' – '+fmtDate(lastLabel.date);
+    document.getElementById('chartBig').textContent = isBP ? (lastLabel.sys+'/'+lastLabel.dia) : lastLabel.v;
+  }
+
+  function renderVitalsTable(){
+    var rows = [];
+    Object.keys(vitals).forEach(function(k){
+      vitals[k].slice(-4).forEach(function(d){
+        var val = k==='bp' ? d.sys+'/'+d.dia+' mmHg' : d.v+' '+metricMeta[k].unit;
+        rows.push({date:d.date, label:metricMeta[k].label, val:val});
+      });
+    });
+    rows.sort(function(a,b){ return b.date.localeCompare(a.date); });
+    document.getElementById('vitalsTable').innerHTML = '<div class="table-wrap"><table class="records"><thead><tr><th>Date</th><th>Metric</th><th>Value</th></tr></thead><tbody>'
+      + rows.slice(0,8).map(function(r){ return '<tr><td class="mono">'+fmtDate(r.date)+'</td><td>'+r.label+'</td><td class="mono">'+r.val+'</td></tr>'; }).join('')
+      + '</tbody></table></div>';
+  }
+
+  document.querySelectorAll('#vitalsTabs .tab-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('#vitalsTabs .tab-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentMetric = btn.dataset.metric;
+      drawChart(currentMetric);
+    });
+  });
+
+  var vMetricSel = document.getElementById('vMetric');
+  function syncVitalForm(){
+    var isBP = vMetricSel.value==='bp';
+    document.getElementById('vFieldsBP').style.display = isBP ? 'grid' : 'none';
+    document.getElementById('vFieldsSingle').style.display = isBP ? 'none' : 'flex';
+    document.getElementById('vSingleLabel').textContent = metricMeta[vMetricSel.value].label + ' (' + metricMeta[vMetricSel.value].unit + ')';
+  }
+  vMetricSel.addEventListener('change', syncVitalForm);
+  syncVitalForm();
+
+  document.getElementById('btnLogVital').addEventListener('click', function(){
+    var metric = vMetricSel.value;
+    var dateIso = TODAY.toISOString().slice(0,10);
+    if(metric==='bp'){
+      var sys = parseFloat(document.getElementById('vSys').value);
+      var dia = parseFloat(document.getElementById('vDia').value);
+      if(!sys || !dia) return;
+      vitals.bp.push({date:dateIso, sys:sys, dia:dia});
+      document.getElementById('vSys').value=''; document.getElementById('vDia').value='';
+    } else {
+      var v = parseFloat(document.getElementById('vSingle').value);
+      if(!v) return;
+      vitals[metric].push({date:dateIso, v:v});
+      document.getElementById('vSingle').value='';
+    }
+    persist();
+    if(currentMetric===metric) drawChart(metric);
+    renderVitalsTable();
+  });
+
+  // ---------------- init ----------------
+  renderAppts();
+  renderDocs();
+  renderMeds();
+  renderMsgs();
+  drawChart(currentMetric);
+  renderVitalsTable();
+})();
+</script>
